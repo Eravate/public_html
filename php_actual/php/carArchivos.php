@@ -5,7 +5,6 @@
             if(is_dir("archivos/".$fichero) && $fichero!="." && $fichero!="..") {
                 echo ("<li class='nav-item'><a class='nav-link' href='?fichero=".$fichero."'>".$fichero."</a></li>");
             }
-            
         }
     }
 
@@ -13,9 +12,8 @@
         $d = dir("archivos");
         while (false !==  ($fichero=$d->read())) {
             if(is_dir("archivos/".$fichero) && $fichero!="." && $fichero!="..") {
-                echo ("<li class='nav-item'><a class='nav-link' href='?fichero=".$fichero."'>".$fichero."</a></li>");
+                echo ("<option value=$fichero>$fichero</option>");
             }
-            
         }
     }
     

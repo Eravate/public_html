@@ -66,7 +66,30 @@
     $fichero=$_GET['fichero'];
     $buscar=$_GET['buscar'];
     $enviarCat=$_GET['enviarCat'];
+    $enviarArch=$_POST['enviarArch'];
     if (!isset($fichero)) {
+      if (isset($enviarCat)) {
+        $nombreCat = $_GET['nombreCat'];
+        $old_umask = umask(0);
+        mkdir("archivos/$nombreCat",0777);
+        umask($old_umask);
+        header("Refresh:0; url=index.php");
+      }
+      if (isset($enviarArch)) {
+        $nombreArch = $_POST['nombreArch'];
+        $categoriaArch = $_POST['categoriaArch'];
+        $dir  = "archivos/$categoriaArch/";
+        $dirfich = $dir . basename($_FILES["arch"]["name"]);
+        $imageFileType = strtolower(pathinfo($dirfich,PATHINFO_EXTENSION));
+        $uploadOk = 1;
+        if($imageFileType != "exe" ) {
+                        $error = "Error, compruebe que el archivo sea un EXE";
+                        $uploadOk = 0;
+                    }
+        if ($uploadOk==1 && move_uploaded_file($_FILES["arch"]["tmp_name"], $dir.$nombreArch.".exe")) {
+          $error = "Archivo Subido";
+        } 
+      }
       if (isset($buscar)) {
         $contenido=$_GET['contenido'];
           echo ("<h1>Resultado de la querry '$contenido': <br><br>");
@@ -80,7 +103,13 @@
           echo ("<form>Nombre Categoría: <input type='text' name='nombreCat' id='nombreCat'> <input type='submit' name='enviarCat' value='Enviar'></form>");
           echo ("<br><br><h2>Subir un Archivo</h2>");
           echo ("<p>Quieres que tengamos un archivo en local? rellena el siguiente formulario:");
-          echo ("<form>Nombre Archivo: <input type='text' name='nombreArch' id='nombreArch'><br><br>Categoria: <select></select><br><br>Archivo: <input type='file' id='arch' name='arch'><br><br><input type='submit' name='enviarArch' value='Enviar'></form>");
+          echo ("<form  enctype='multipart/form-data' method='POST'>Nombre Archivo: <input type='text' name='nombreArch' id='nombreArch'><br><br>Categoria: <select name='categoriaArch'>");
+          cargarDirsSelect();
+          echo ("</select><br><br>Archivo: <input type='file' id='arch' name='arch'><br><br><input type='submit' name='enviarArch' value='Enviar'> ");
+          if (isset($error)) {
+            echo($error);
+          }
+          echo ("</form>");
       }
     } else {
         echo ("<h1>Archivos a descargar en ".$fichero.": </h1><br><br>");
