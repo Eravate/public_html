@@ -102,12 +102,9 @@
 
   <div class="collapse navbar-collapse" id="navbarsExampleDefault">
     <ul class="navbar-nav mr-auto">
-        <li class="nav-item">
-            <a class="nav-link" href="#">Registrar Pedido</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#">Lista Pedidos</a>
-        </li>
+        <!--<li class="nav-item">
+            <a class="nav-link" href="#">Temp</a>
+        </li>-->
     </ul>
     <form action="index.php" method="GET" class="form-inline my-2 my-lg-0">
       <input class="form-control mr-sm-2" type="text" placeholder="Buscar" aria-label="Search" name="contenido">
@@ -151,7 +148,7 @@
 </main>
 
 <footer class="container">
-  <p>&copy; Skalen S.L. 2020-2021</p>
+  <p>&copy; Arkadiusz-Stefan Skawinski 2020-2021</p>
 </footer>
 <script src="js/jquery.slim.min.js"></script>
 <script src="js/boostrap.bundle.min.js"></script></body>
