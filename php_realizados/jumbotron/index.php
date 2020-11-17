@@ -118,6 +118,20 @@
   <!-- Main jumbotron for a primary marketing message or call to action -->
   <div class="jumbotron">
     <div class="container">
+    <?php 
+    echo "<script src=\"https://code.jquery.com/jquery-1.12.4.min.js\"></script>
+    <script src=\"https://rawgithub.com/indrimuska/jquery-editable-select/master/dist/jquery-editable-select.min.js\"></script>
+    <link href=\"https://rawgithub.com/indrimuska/jquery-editable-select/master/dist/jquery-editable-select.min.css\" rel=\"stylesheet\">
+    <select id=\"editable-select\">
+      <option>Alfa Romeo</option>
+      <option>Audi</option>
+      <option>BMW</option>
+      <option>Citroen</option>
+    </select>
+    <script>
+    $('#editable-select').editableSelect();
+    </script>";
+    ?>
     </div>
   </div>
 

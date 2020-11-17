@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <?php ini_set('display_errors',0);?>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
@@ -63,6 +64,49 @@
         }
       .x:hover { cursor: pointer; }
       .x:hover::before, .x:hover::after { display: block; }
+
+
+      /* The alert message box */
+      .alertD {
+        padding: 20px;
+        background-color: #f44336; /* Red */
+        color: white;
+        margin-bottom: 15px;
+      }
+      .alertS {
+        padding: 20px;
+        background-color: #56fc03; /* Red */
+        color: white;
+        margin-bottom: 15px;
+      }
+      /* The close button */
+      .closebtn {
+        margin-left: 15px;
+        color: white;
+        font-weight: bold;
+        float: right;
+        font-size: 22px;
+        line-height: 20px;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+
+      /* When moving the mouse over the close button */
+      .closebtn:hover {
+        color: black;
+      }
+      #contenido {
+        width: 400px;
+      }
+      #contenido input {
+        float: right;
+      }
+      #contenido select {
+        float: right;
+      }
+      #contenido textarea {
+        float: right;
+      }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script type="text/javascript">
@@ -90,8 +134,49 @@
         });
     });
     </script>
-    <!-- Custom styles for this template -->
+    <!-- Custom styles for this template
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script> -->
+
     <link href="css/jumbotron.css" rel="stylesheet">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://rawgithub.com/indrimuska/jquery-editable-select/master/dist/jquery-editable-select.min.js"></script>
+    <link href="https://rawgithub.com/indrimuska/jquery-editable-select/master/dist/jquery-editable-select.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script>
+    $( function() {
+      $( "#datepicker" ).datepicker({dateFormat:'yy-mm-dd',minDate: new Date()});
+    } );
+    </script>
+    <script>
+      function confirmarReenvio() {
+        if(confirm("Estás seguro? esto es una acción irreversible.")) {
+          document.getElementById('regPedido').submit();
+        }
+      }
+    </script>
+    <script>
+      function getSelectedOption(sel) {
+        var opt;
+        for ( var i = 0, len = sel.options.length; i < len; i++ ) {
+            opt = sel.options[i];
+            if ( opt.selected === true ) {
+                break;
+            }
+        }
+        return opt;
+      }
+      function cargarInfo() {
+        var sel = document.getElementsByClassName('selPedidoLis');
+        var opt = sel[0].value;
+        var codCliente = opt.split(" ")[0];
+        window.location.href = "index.php?pagina=lisPedido&codCliente=" + codCliente;
+      }
+      function establecerCliente(codCliente) {
+        var sel = document.getElementsByClassName('selPedidoLis');
+        sel[0].value = codCliente;
+      }
+    </script>
   </head>
   <body>
     <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
@@ -103,27 +188,94 @@
   <div class="collapse navbar-collapse" id="navbarsExampleDefault">
     <ul class="navbar-nav mr-auto">
         <li class="nav-item">
-            <a class="nav-link" href="#">Registrar Pedido</a>
+            <a class="nav-link" href="index.php?pagina=regPedido">Registrar Pedido</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#">Lista Pedidos</a>
+            <a class="nav-link" href="index.php?pagina=lisPedido">Lista Pedidos</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="index.php?pagina=anCliente">Añadir Cliente</a>
         </li>
     </ul>
-    <form action="index.php" method="GET" class="form-inline my-2 my-lg-0">
-      <input class="form-control mr-sm-2" type="text" placeholder="Buscar" aria-label="Search" name="contenido">
-      <input class="btn btn-outline-success my-2 my-sm-0" type="submit" value="Buscar" name="buscar"></input>
-    </form>
   </div>
 </nav>
-
 <main role="main">
 
   <!-- Main jumbotron for a primary marketing message or call to action -->
   <div class="jumbotron">
     <div class="container">
-    </div>
-  </div>
+        <span id="contEl"></span>
+        <?php
+        
+        $pagina = $_GET['pagina'];
+        if (isset($pagina) && $pagina != "") {
+          $dwes = new mysqli('localhost', 'alumno', 'alumno', 'jardineria');
+          $error = $dwes->connect_errno;
+          if ($error != null) { 
+            echo "<p style='color:red;'>Error $error conectando a la base de datos: $dwes->connect_error</p>";     
+            exit();
+          }
+          switch($pagina) {
+            case "regPedido": 
+              $resultado = $dwes->query("SELECT * FROM clientes");
+              
+              $diaHoy = date("Y-m-d");
+              echo "<h1>Registrar Pedido</h1><br>";
+              echo "<form id='regPedido' action='index.php?pagina=regPedido' method='POST'>
+              <fieldset>
+              <legend>Rellena las siguientes casillas para registrar un pedido:</legend><br>
+              <div id='contenido'>
 
+              Cliente: <select id=\"editable-select\">";
+              while ($cliente = $resultado->fetch_array()) {
+                echo "<option value='$cliente[CodigoCliente]'>$cliente[NombreContacto] $cliente[ApellidoContacto]</option>";
+              }
+              echo "</select><br><br>
+              Estado: <input type='text'  style='background-color: #e9ecef;' name='estado' value='Pendiente' readonly>
+              <br><br>Fecha Pedido: <input type='text' style='background-color: #e9ecef;' value='$diaHoy' readonly><br><br>
+              Fecha Prevista: <input type='text' id='datepicker' value='$diaHoy'><br><br>
+              Comentario: <textarea name='comentario' rows='4'y> </textarea><br><br>
+              <input style='clear: both; float: left;' type='button' onclick='confirmarReenvio()' value='Enviar'>
+              </div>
+              </fieldset>
+              </form>";
+              break;
+            case "lisPedido":
+              $resultado = $dwes->query("SELECT * FROM clientes;");
+              echo "<h1>Lista Pedidos</h1><br>";
+              echo "Pedido: <select id=\"editable-select\" class='selPedidoLis' onfocusout='cargarInfo()'>";
+              while ($pedido = $resultado->fetch_array()) {
+                echo "<option value='$pedido[CodigoCliente]'>$pedido[CodigoCliente] - $pedido[NombreContacto] $pedido[ApellidoContacto]</option>";
+              }
+              echo "</select><br><br>";
+              $codCliente = $_GET['codCliente'];
+              if (isset($codCliente) && $codCliente != "") {
+                $num = 0;
+                $resultado = $dwes->query("SELECT p.*, c.NombreContacto, c.ApellidoContacto FROM pedidos p, clientes c WHERE c.CodigoCliente = p.CodigoCliente && c.CodigoCliente = $codCliente;");
+                echo "<script>establecerCliente($codCliente);</script><div>";
+                while ($pedido = $resultado->fetch_array()) {
+                  if ($num == 0) {
+                    echo "$pedido[CodigoCliente] $pedido[NombreContacto] $pedido[ApellidoContacto]";
+                    $num = 1;
+                  }
+                  echo "<hr><p>Codigo Pedido: $pedido[CodigoPedido]</p><p>Fecha Pedido: $pedido[FechaPedido]</p><p>Fecha Entrega: $pedido[FechaEntrega]</p><p>Estado: $pedido[Estado]</p><p>Comentarios: $pedido[Comentarios]</p><p></p><p></p>";
+                }
+                echo "</div>";
+              }
+              break;
+            case "anCliente":
+              echo "<h1>Añadir Cliente</h1>";
+              break;
+          }
+        } else {
+          echo ("<h1>Bienvenido a la tienda de la Jardinería</h1>
+          <p>Aquí podra realizar pedidos para diferentes clientes, ver los pedidos realizados, o añadir nuevos clientes a la base de datos!</p>
+          <p>Eliga una de las opciones listadas en el menú superior de la página para empezar</p>");
+        }
+      ?>
+    </div>
+
+  </div>
   <!--<div class="container">
 
     <div class="row">
@@ -149,10 +301,13 @@
   </div>  /container -->
 
 </main>
-
+<script>
+$('#editable-select').editableSelect();
+</script>
 <footer class="container">
   <p>&copy; Skalen S.L. 2020-2021</p>
 </footer>
-<script src="js/jquery.slim.min.js"></script>
-<script src="js/boostrap.bundle.min.js"></script></body>
+
+<!--<script src="js/jquery.slim.min.js"></script>
+<script src="js/boostrap.bundle.min.js"></script></body>-->
 </html>
