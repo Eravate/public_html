@@ -154,6 +154,11 @@
           document.getElementById('regPedido').submit();
         }
       }
+      function confirmarReenvioCl() {
+        if(confirm("Estás seguro? esto es una acción irreversible.")) {
+          document.getElementById('anCliente').submit();
+        }
+      }
     </script>
     <script>
       function getSelectedOption(sel) {
@@ -209,7 +214,8 @@
         
         $pagina = $_GET['pagina'];
         if (isset($pagina) && $pagina != "") {
-          $dwes = new mysqli('localhost', 'alumno', 'alumno', 'jardineria');
+          #$dwes = new mysqli('localhost', 'alumno', 'alumno', 'jardineria');
+          $dwes = new mysqli('localhost', 'root', 'toor', 'jardineria');
           $error = $dwes->connect_errno;
           if ($error != null) { 
             echo "<p style='color:red;'>Error $error conectando a la base de datos: $dwes->connect_error</p>";     
@@ -217,8 +223,39 @@
           }
           switch($pagina) {
             case "regPedido": 
+              $enviarPedido = $_POST['enviarPedido'];
+              if (isset($enviarPedido) && $enviarPedido!="") {
+                $resultadoCodPed = $dwes->query("SELECT max(CodigoPedido) as CodigoPedidoMax FROM pedidos;");
+                while ($max = $resultadoCodPed->fetch_array()) {
+                  $CodigoPedido = $max['CodigoPedidoMax'];
+                }
+                $CodigoPedido++;
+                echo "<script>console.log('Codigo Pedido: ".$CodigoPedido."');</script>";
+                $codCliente = $_POST['codCliente'];
+                $codClienteS = explode(" ", $codCliente)[0];
+                $estado = $_POST['estado'];
+                $fechaPedido = $_POST['fechaPedido'];
+                $fechaPrevista = $_POST['fechaPrevista'];
+                $comentario = $_POST['comentario'];
+                $resultado = $dwes->stmt_init();
+                $fechaEntrega = "";
+                $resultado = $dwes->prepare("INSERT INTO pedidos VALUES (?,?,?,null,?,?,?);");
+                $resultado->bind_param("issssi",$CodigoPedido,$fechaPedido,$fechaPrevista,$estado,$comentario,$codClienteS);
+                if ($resultado->execute()) {
+                  echo "
+                  <div class=\"alertS\">
+                    <span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span> 
+                    <strong>Insertado!</strong> El pedido se ha registrado correctamente.
+                  </div>";
+                } else {
+                  echo "
+                  <div class=\"alertD\">
+                    <span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span> 
+                    <strong>Error!</strong> Error al insertar los datos a la base de datos, intentalo de nuevo.
+                  </div>";
+                }
+              }
               $resultado = $dwes->query("SELECT * FROM clientes");
-              
               $diaHoy = date("Y-m-d");
               echo "<h1>Registrar Pedido</h1><br>";
               echo "<form id='regPedido' action='index.php?pagina=regPedido' method='POST'>
@@ -226,16 +263,16 @@
               <legend>Rellena las siguientes casillas para registrar un pedido:</legend><br>
               <div id='contenido'>
 
-              Cliente: <select id=\"editable-select\">";
+              Cliente: <select id=\"editable-select\" name='codCliente'>";
               while ($cliente = $resultado->fetch_array()) {
-                echo "<option value='$cliente[CodigoCliente]'>$cliente[NombreContacto] $cliente[ApellidoContacto]</option>";
+                echo "<option value='$cliente[CodigoCliente]'>$cliente[CodigoCliente] $cliente[NombreContacto] $cliente[ApellidoContacto]</option>";
               }
               echo "</select><br><br>
               Estado: <input type='text'  style='background-color: #e9ecef;' name='estado' value='Pendiente' readonly>
-              <br><br>Fecha Pedido: <input type='text' style='background-color: #e9ecef;' value='$diaHoy' readonly><br><br>
-              Fecha Prevista: <input type='text' id='datepicker' value='$diaHoy'><br><br>
+              <br><br>Fecha Pedido: <input type='text' name='fechaPedido' style='background-color: #e9ecef;' value='$diaHoy' readonly><br><br>
+              Fecha Prevista: <input type='text' name='fechaPrevista' id='datepicker' value='$diaHoy'><br><br>
               Comentario: <textarea name='comentario' rows='4'y> </textarea><br><br>
-              <input style='clear: both; float: left;' type='button' onclick='confirmarReenvio()' value='Enviar'>
+              <input style='clear: both; float: left;' type='submit' name='enviarPedido' value='Enviar'>
               </div>
               </fieldset>
               </form>";
@@ -251,20 +288,43 @@
               $codCliente = $_GET['codCliente'];
               if (isset($codCliente) && $codCliente != "") {
                 $num = 0;
-                $resultado = $dwes->query("SELECT p.*, c.NombreContacto, c.ApellidoContacto FROM pedidos p, clientes c WHERE c.CodigoCliente = p.CodigoCliente && c.CodigoCliente = $codCliente;");
-                echo "<script>establecerCliente($codCliente);</script><div>";
-                while ($pedido = $resultado->fetch_array()) {
+                $resultado = $dwes->stmt_init();
+                $resultado = $dwes->prepare("SELECT p.CodigoPedido, p.FechaPedido, p.FechaEsperada, p.Estado, p.Comentarios, c.NombreContacto, c.ApellidoContacto FROM pedidos p, clientes c WHERE c.CodigoCliente = p.CodigoCliente && c.CodigoCliente = ?;");
+                $resultado->bind_param('s',$codCliente);
+                $resultado->execute();
+                $resultado->bind_result($codPedido, $fechaPedido, $fechaEspera, $estado, $comentarios, $nombreContacto, $apellidoContacto);
+                #echo "<script>establecerCliente($codCliente);</script><div>";
+                while ($pedido = $resultado->fetch()) {
                   if ($num == 0) {
-                    echo "$pedido[CodigoCliente] $pedido[NombreContacto] $pedido[ApellidoContacto]";
+                    echo "$codCliente $nombreContacto $apellidoContacto";
                     $num = 1;
                   }
-                  echo "<hr><p>Codigo Pedido: $pedido[CodigoPedido]</p><p>Fecha Pedido: $pedido[FechaPedido]</p><p>Fecha Entrega: $pedido[FechaEntrega]</p><p>Estado: $pedido[Estado]</p><p>Comentarios: $pedido[Comentarios]</p><p></p><p></p>";
+                  echo "<hr><p>Codigo Pedido: $codPedido</p><p>Fecha Pedido: $fechaPedido</p><p>Fecha Entrega: $fechaEspera</p><p>Estado: $estado</p><p>Comentarios: $comentarios</p><p></p><p></p>";
                 }
                 echo "</div>";
               }
               break;
             case "anCliente":
-              echo "<h1>Añadir Cliente</h1>";
+              $resultado = $dwes->query("SELECT * FROM empleados");
+              echo "<h1>Añadir Cliente</h1><br>";
+              echo "<form id='anCliente' action='index.php?pagina=anCliente' method='POST'> 
+              <fieldset>
+              <legend>Rellena las siguientes casillas para registrar un cliente:</legend><br>
+              <div id='contenido'>
+              Nombre Contacto: <input type='text' name='nombreContacto' required><br><br>
+              Apellido Contacto: <input type='text' name='apellidoContacto' required><br><br>
+              Telefono: <input type='text' name='telefono' pattern='[0-9]+' required><br><br>
+              Fax: <input type='text' name='fax' pattern='[0-9]+' required><br><br>
+              Dirección: <input type='text' name='direccion' required><br><br>
+              Ciudad: <input type='text' name='ciudad' pattern='[A-Z ]*' required><br><br>
+              Región: <input type='text' name='region' required><br><br>
+              Código Postal: <input type='text' name='codigoPostal' required><br><br>
+              Representante Ventas: <select id=\"editable-select\">";
+              while ($empleado = $resultado->fetch_array()) {
+                echo "<option value='$empleado[CodigoEmpleado]'>$empleado[Nombre] $empleado[Apellido1]</option>";
+              }
+              echo "</select><br><br>Limite Credito: <input type='text' name='limiteCredito' required><br><br>
+              <input type='submit' name='enviarCliente' value='Enviar' style='float:left'></fieldset></form>";
               break;
           }
         } else {
@@ -307,7 +367,6 @@ $('#editable-select').editableSelect();
 <footer class="container">
   <p>&copy; Skalen S.L. 2020-2021</p>
 </footer>
-
 <!--<script src="js/jquery.slim.min.js"></script>
 <script src="js/boostrap.bundle.min.js"></script></body>-->
 </html>
