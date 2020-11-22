@@ -96,7 +96,7 @@
         color: black;
       }
       #contenido {
-        width: 400px;
+        width: 500px;
       }
       #contenido input {
         float: right;
@@ -109,31 +109,38 @@
       }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script type="text/javascript">
-    $(document).ready(function(){
-        var maxField = 10; //Input fields increment limitation
-        var addButton = $('.add_button'); //Add button selector
-        var wrapper = $('.field_wrapper'); //Input field wrapper
-        var fieldHTML = '<div><input type="text" name="field_name[]" value=""/><a href="javascript:void(0);" class="remove_button"><img src="remove-icon.png"/></a></div>'; //New input field html 
-        var x = 1; //Initial field counter is 1
-        
-        //Once add button is clicked
-        $(addButton).click(function(){
-            //Check maximum number of input fields
-            if(x < maxField){ 
-                x++; //Increment field counter
-                $(wrapper).append(fieldHTML); //Add field html
-            }
-        });
-        
-        //Once remove button is clicked
-        $(wrapper).on('click', '.remove_button', function(e){
-            e.preventDefault();
-            $(this).parent('div').remove(); //Remove field html
-            x--; //Decrement field counter
-        });
+    <?php 
+    $dwes = new mysqli('localhost', 'alumno', 'alumno', 'jardineria');
+    $resultado = $dwes->query("SELECT * FROM productos");
+    
+    echo "<script>
+    var max = 5;
+
+    $(function() {
+            var scntDiv = $('#p_scents');
+            var i = $('#p_scents p').size() + 1;
+            
+            $('#addScnt').on('click', null, function() {
+                if (i <= max) {
+                    $('<p><label for=\"p_scnts\"> Cantidad: <input style=\"float:none;height:25px;\" type=\"text\" name=\"cantidad' + i +'\" size=\"2\">&nbsp;&nbsp; <select id=\"p_scnt\" style=\"width:250px;\" name=\"producto' + i +'\" value=\"\">";
+                    while ($producto = $resultado->fetch_array()) {
+                      echo "<option value=\"$producto[CodigoProducto]\">$producto[CodigoProducto] $producto[Nombre]</option>";
+                    }
+                    echo "</select></label><a href=\"#\" id=\"remScnt\"> Remover</a></p>').appendTo(scntDiv);
+                    i++;
+                    return false;
+                }
+            });
+            
+            $(document).on('click','#remScnt', function() {
+                    $(this).parent().remove();
+                    i--;
+                    return false;
+            });
     });
-    </script>
+    </script>";
+    $dwes->close();
+    ?>
     <!-- Custom styles for this template
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script> -->
 
@@ -230,7 +237,6 @@
                   $CodigoPedido = $max['CodigoPedidoMax'];
                 }
                 $CodigoPedido++;
-                echo "<script>console.log('Codigo Pedido: ".$CodigoPedido."');</script>";
                 $codCliente = $_POST['codCliente'];
                 $codClienteS = explode(" ", $codCliente)[0];
                 $estado = $_POST['estado'];
@@ -241,12 +247,50 @@
                 $fechaEntrega = "";
                 $resultado = $dwes->prepare("INSERT INTO pedidos VALUES (?,?,?,null,?,?,?);");
                 $resultado->bind_param("issssi",$CodigoPedido,$fechaPedido,$fechaPrevista,$estado,$comentario,$codClienteS);
+                
                 if ($resultado->execute()) {
                   echo "
                   <div class=\"alertS\">
                     <span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span> 
                     <strong>Insertado!</strong> El pedido se ha registrado correctamente.
                   </div>";
+                  $cantidad1 = $_POST['cantidad1'];
+                  $producto1 = explode(" ", $_POST['producto1']);
+                  $arrProducto = array($cantidad1, $producto1);
+                  $arrProductos = array();
+                  array_push($arrProductos,$arrProducto);
+                  $cantidad2 = $_POST['cantidad2'];
+                  $cantidad3 = $_POST['cantidad3'];
+                  $cantidad4 = $_POST['cantidad4'];
+                  $cantidad5 = $_POST['cantidad5'];
+                  if (isset($cantidad2) && $cantidad2!="") {
+                    $arrProducto = array($cantidad2,$_POST['producto2']);
+                    array_push($arrProductos,$arrProducto);
+                  }
+                  if (isset($cantidad3) && $cantidad3!="") {
+                    $arrProducto = array($cantidad3,$_POST['producto3']);
+                    array_push($arrProductos,$arrProducto);
+                  }
+                  if (isset($cantidad4) && $cantidad4!="") {
+                    $arrProducto = array($cantidad4,$_POST['producto4']);
+                    array_push($arrProductos,$arrProducto);
+                  }
+                  if (isset($cantidad5) && $cantidad5!="") {
+                    $arrProducto = array($cantidad5,$_POST['producto5']);
+                    array_push($arrProductos,$arrProducto);
+                  }
+                  foreach ($arrProductos as $producto) {
+                    $resultadoPrePed = $dwes->query("SELECT PrecioVenta FROM productos WHERE CodigoProducto=\"".$producto[1][0]."\";");
+                    while ($precio = $resultadoPrePed->fetch_array()) {
+                      $precioPro = $precio['PrecioVenta'];
+                    }
+                    
+                    $resultado = $dwes->prepare("INSERT INTO detallepedidos VALUES (?,?,?,?,1);");
+                    $nombreProducto = $producto[1][0];
+                    $cantidadProducto = $producto[0];
+                    $resultado->bind_param("isii",$CodigoPedido,$nombreProducto,$cantidadProducto,$precioPro);
+                    $resultado->execute();
+                  }
                 } else {
                   echo "
                   <div class=\"alertD\">
@@ -267,11 +311,22 @@
               while ($cliente = $resultado->fetch_array()) {
                 echo "<option value='$cliente[CodigoCliente]'>$cliente[CodigoCliente] $cliente[NombreContacto] $cliente[ApellidoContacto]</option>";
               }
+              $resultado = $dwes->query("SELECT * FROM productos");
               echo "</select><br><br>
               Estado: <input type='text'  style='background-color: #e9ecef;' name='estado' value='Pendiente' readonly>
               <br><br>Fecha Pedido: <input type='text' name='fechaPedido' style='background-color: #e9ecef;' value='$diaHoy' readonly><br><br>
               Fecha Prevista: <input type='text' name='fechaPrevista' id='datepicker' value='$diaHoy'><br><br>
-              Comentario: <textarea name='comentario' rows='4'y> </textarea><br><br>
+              Comentario: <textarea name='comentario' rows='4'y> </textarea><br><br><br><br><br>
+              <p><a href=\"#\" id=\"addScnt\" style=\"clear:both;\">Añade otro producto</a></p><br<br>
+              <div id=\"p_scents\">
+                <p>
+                  <label for=\"p_scnts\"> Cantidad: <input style=\"float:none;height:25px;\" type=\"text\" name=\"cantidad1\" size=\"2\" required>&nbsp;&nbsp;<select id=\"p_scnt\" style='width:250px;' name=\"producto1\">";
+                  while ($producto = $resultado->fetch_array()) {
+                    echo "<option value='$producto[CodigoProducto]'>$producto[CodigoProducto] $producto[Nombre]</option>";
+                  }
+                  echo "</select></label>
+                  </p>
+              </div>
               <input style='clear: both; float: left;' type='submit' name='enviarPedido' value='Enviar'>
               </div>
               </fieldset>
@@ -305,23 +360,62 @@
               }
               break;
             case "anCliente":
+              $enviarCliente = $_POST['enviarCliente'];
+              if (isset($enviarCliente) && $enviarCliente!="") {
+                $resultadoCodCli = $dwes->query("SELECT max(CodigoCliente) as CodigoClienteMax FROM clientes;");
+                while ($max = $resultadoCodCli->fetch_array()) {
+                  $CodigoCliente = $max['CodigoClienteMax'];
+                }
+                $CodigoCliente++;
+                $nombreCliente = $_POST['nombreCliente'];
+                $nombreContacto = $_POST['nombreContacto'];
+                $apellidoContacto = $_POST['apellidoContacto'];
+                $telefono = $_POST['telefono'];
+                $fax = $_POST['fax'];
+                $direccion = $_POST['direccion'];
+                $ciudad = $_POST['ciudad'];
+                $region = $_POST['region'];
+                $pais = $_POST['pais'];
+                $codigoPostal = $_POST['codigoPostal'];
+                $representanteVentas = $_POST['representanteVentas'];
+                $limiteCredito = $_POST['limiteCredito'];
+                $representanteVentasS = explode(" ", $representanteVentas)[0];
+                $resultado = $dwes->stmt_init();
+                $resultado = $dwes->prepare("INSERT INTO clientes VALUES (?,?,?,?,?,?,?,null,?,?,?,?,?,?);");
+                $resultado->bind_param("isssssssssiii",$CodigoCliente,$nombreCliente,$nombreContacto,$apellidoContacto,$telefono,$fax,$direccion,$ciudad,$region,$pais,$codigoPostal,$representanteVentasS,$limiteCredito);
+                if ($resultado->execute()) {
+                  echo "
+                  <div class=\"alertS\">
+                    <span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span> 
+                    <strong>Insertado!</strong> El cliente se ha registrado correctamente.
+                  </div>";
+                } else {
+                  echo "
+                  <div class=\"alertD\">
+                    <span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span> 
+                    <strong>Error!</strong> Error al insertar los datos a la base de datos, intentalo de nuevo.
+                  </div>";
+                }
+              }
               $resultado = $dwes->query("SELECT * FROM empleados");
               echo "<h1>Añadir Cliente</h1><br>";
               echo "<form id='anCliente' action='index.php?pagina=anCliente' method='POST'> 
               <fieldset>
               <legend>Rellena las siguientes casillas para registrar un cliente:</legend><br>
               <div id='contenido'>
+              Nombre Cliente: <input type='text' name='nombreCliente' required><br><br>
               Nombre Contacto: <input type='text' name='nombreContacto' required><br><br>
               Apellido Contacto: <input type='text' name='apellidoContacto' required><br><br>
               Telefono: <input type='text' name='telefono' pattern='[0-9]+' required><br><br>
               Fax: <input type='text' name='fax' pattern='[0-9]+' required><br><br>
               Dirección: <input type='text' name='direccion' required><br><br>
-              Ciudad: <input type='text' name='ciudad' pattern='[A-Z ]*' required><br><br>
+              Ciudad: <input type='text' name='ciudad' required><br><br>
               Región: <input type='text' name='region' required><br><br>
+              País: <input type='text' name='pais' required><br><br>
               Código Postal: <input type='text' name='codigoPostal' required><br><br>
-              Representante Ventas: <select id=\"editable-select\">";
+              Representante Ventas: <select id=\"editable-select\" name='representanteVentas'>";
               while ($empleado = $resultado->fetch_array()) {
-                echo "<option value='$empleado[CodigoEmpleado]'>$empleado[Nombre] $empleado[Apellido1]</option>";
+                echo "<option value='$empleado[CodigoEmpleado]'>$empleado[CodigoEmpleado] $empleado[Nombre] $empleado[Apellido1]</option>";
               }
               echo "</select><br><br>Limite Credito: <input type='text' name='limiteCredito' required><br><br>
               <input type='submit' name='enviarCliente' value='Enviar' style='float:left'></fieldset></form>";
