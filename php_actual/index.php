@@ -1,7 +1,18 @@
+<?php
+ini_set('display_errors',0);
+session_start();
+$eliminar = $_POST['eliminar'];
+if (isset($eliminar)) {
+  session_destroy();
+  header("Location: login.php");
+}
+if (!isset($_SESSION['usuario'])) {
+  header("Location: login.php");
+}
+?>
 <!doctype html>
 <html lang="en">
   <head>
-    <?php ini_set('display_errors',0);?>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
@@ -110,7 +121,8 @@
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <?php 
-    $dwes = new mysqli('localhost', 'alumno', 'alumno', 'jardineria');
+    #$dwes = new mysqli('localhost', 'alumno', 'alumno', 'jardineria');
+    $dwes = new mysqli('localhost', 'root', 'toor', 'jardineria');
     $resultado = $dwes->query("SELECT * FROM productos");
     
     echo "<script>
@@ -209,6 +221,10 @@
             <a class="nav-link" href="index.php?pagina=anCliente">Añadir Cliente</a>
         </li>
     </ul>
+    <form action="index.php" method="POST" class="form-inline my-2 my-lg-0">
+      <?php echo "<p style='color:white;position:relative;top:8px;'>Bienvenido ".$_SESSION['usuario']."&nbsp;&nbsp;&nbsp;</p>";?>
+      <input class="btn btn-outline-success my-2 my-sm-0" type="submit" value="Eliminar" name="eliminar"></input>
+    </form>
   </div>
 </nav>
 <main role="main">
