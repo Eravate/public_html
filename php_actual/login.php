@@ -1,28 +1,16 @@
 <?php
 ini_set('display_errors',0);
 session_start();
-$login = $_POST['enviar'];
-if (isset($login)) {
-    $usuario = $_POST['usuario'];
-    $clave = $_POST['clave'];
-    $dwes = new mysqli('localhost', 'root', 'toor', 'jardineria');
-    $dwes->stmt_init();
-    $resultado = $dwes->prepare("SELECT * FROM usuarios WHERE nombreUsuario=? && clave=?");
-    $resultado->bind_param('ss',$usuario,$clave);
-    $resultado->execute();
-    $resultado->bind_result($usuarioF, $claveF);
-    #echo "<script>establecerCliente($codCliente);</script><div>";
-    if($resultado->fetch()) {
-        $_SESSION['usuario'] = $usuario;
-    }
-}
-if (isset($_SESSION['usuario'])) {
-    header("Location: index.php");
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- script muy importante -->
+    <script>
+        if ( window.history.replaceState ) {
+            window.history.replaceState( null, null, window.location.href );
+        }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Jardineria</title>
@@ -135,13 +123,16 @@ if (isset($_SESSION['usuario'])) {
   <!-- Main jumbotron for a primary marketing message or call to action -->
   <div class="jumbotron">
     <div class="container">
-        <form action='login.php' method='POST' style='width:400px;margin:auto;'>
+        <form action='procesa.php' method='POST' style='width:400px;margin:auto;'>
             <fieldset>
                 <legend>Log In</legend>
                 <p id='errorLogIn' style="color:red;">&nbsp;</p>
-                <?php if (isset($login)) {
-                  echo "<script>document.getElementById(\"errorLogIn\").innerHTML = 'Error, Nombre de usuario o contraseña incorrectos';</script>"; 
-                }?>
+                <?php 
+                  $login = $_POST['login'];
+                  if (isset($login)) {
+                    echo "<script>document.getElementById(\"errorLogIn\").innerHTML = 'Error, Nombre de usuario o contraseña incorrectos';</script>"; 
+                  }
+                ?>
                 Usuario: <input type='text' name='usuario' required><br><br>
                 Contraseña: <input type='password' name='clave' required><br><br>
                 <input style='float:none;margin:auto;' type='submit' name='enviar' value='Enviar'>
