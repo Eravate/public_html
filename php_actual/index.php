@@ -85,6 +85,11 @@ if (!isset($_SESSION['login'])) {
             float: left;
         }
     </style>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://rawgithub.com/indrimuska/jquery-editable-select/master/dist/jquery-editable-select.min.js"></script>
+    <link href="https://rawgithub.com/indrimuska/jquery-editable-select/master/dist/jquery-editable-select.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script>
     function eliminar() {
 
@@ -105,9 +110,41 @@ if (!isset($_SESSION['login'])) {
         <section>
             <?php
                 if (isset($_GET["accion"])) {
-
+                    echo "<form action='procesa.php' method='POST'><input type='hidden' name='origen' value='".$_SESSION['login']."'>";
+                    echo "<div style='width:80px;justify-content:flex-end;display:inline-flex'>Para:&nbsp;</div><select id=\"editable-select\" name='destino'>";
+                    $dwes = new mysqli('localhost', 'root', 'toor', 'mensajeria');
+                    //$dwes = new mysqli('localhost', 'alumno', 'alumno', 'mensajeria');
+                    $dwes->stmt_init();
+                    $resultado = $dwes->prepare("SELECT login FROM contactos");
+                    $resultado->execute();
+                    $resultado->bind_result($loginRec);
+                    while ($resultado->fetch()) {
+                        echo "<option value='$loginRec'>$loginRec</option>";
+                    }
+                    echo "</select><br><br>";
+                    echo "<div style='width:80px;justify-content:flex-end;display:inline-flex'>Asunto:&nbsp;</div><input style='width:500px'type='text' name='asunto'><br><br>";
+                    echo "<div style='width:80px;justify-content:flex-end;display:inline-flex;'>&nbsp;</div><textarea style='width:500px; height:300px;' name='texto' placeholder='Escribe...'></textarea>";
+                    echo "<div style='width:580px;margin-top:50px;justify-content:flex-end;display:inline-flex;'><input style='background-color:#427cc5;'type='submit' name='enviarMensaje' value='Enviar'></div>";
+                    echo "</form>";
                 } elseif (isset($_POST["accion"])) {
-                    
+                    $dwes = new mysqli('localhost', 'root', 'toor', 'mensajeria');
+                    //$dwes = new mysqli('localhost', 'alumno', 'alumno', 'mensajeria');
+                    if ($_POST['menLeido']=="N") {
+                        $dwes->stmt_init();
+                        $resultado = $dwes->prepare("UPDATE mensajes SET leido='S' WHERE id=?");
+                        $resultado->bind_param('s',$_POST['mensaje']);
+                        $resultado->execute();
+                    }
+                    $dwes->stmt_init();
+                    $resultado = $dwes->prepare("SELECT origen, asunto, texto, fecha FROM mensajes WHERE id = ?");
+                    $resultado->bind_param('s',$_POST['mensaje']);
+                    $resultado->execute();
+                    $resultado->bind_result($origen, $asunto, $texto, $fecha);
+                    $resultado->fetch();
+                    echo "<p><span style='color:#427cc5;font-weight:bold;'>Asunto: </span>$asunto</p>";
+                    echo "<p><span style='color:#427cc5;font-weight:bold;'>De: </span>$origen</p>";
+                    echo "<p><span style='color:#427cc5;font-weight:bold;'>Recibido: </span>$fecha</p>";
+                    echo "<div style='width:800px;height:400px;border:1px solid black;padding:10px;'>$texto</div>";
                 } else {
                     echo "<div class='tab'>
                     <div class='titTH'>
@@ -117,22 +154,26 @@ if (!isset($_SESSION['login'])) {
                         <div class='th' style=\"width: 50px;\"></div>
                     </div>";
                     $dwes = new mysqli('localhost', 'root', 'toor', 'mensajeria');
+                    //$dwes = new mysqli('localhost', 'alumno', 'alumno', 'mensajeria');
                     $dwes->stmt_init();
                     $resultado = $dwes->prepare("SELECT m.id AS id, c.nombre AS nombre, m.asunto AS asunto, m.fecha AS fecha, m.leido AS leido FROM contactos c, mensajes m WHERE m.origen = c.login AND destino=?");
                     $resultado->bind_param('s',$_SESSION['login']);
                     $resultado->execute();
                     $resultado->bind_result($menId, $menNombre, $menAsunto, $menFecha, $menLeido);
-                    while ($mensaje = $resultado->fetch()) {
+                    while ($resultado->fetch()) {
                         echo ("<div class='titTR'><div class='td'><span>".$menNombre."</span></div>
-                        <div class='td'><form method=\"POST\" action=\"index.php\"><input type='hidden' name='accion' value='leeMen'><button type=\"submit\" name=\"mensaje\" value=\"$menId\" class=\"link-button\">$menAsunto</button></form></div>
+                        <div class='td'><form method=\"POST\" action=\"index.php\"><input type='hidden' name='accion' value='leeMen'><input type='hidden' name='menLeido' value='$menLeido'><button type=\"submit\" name=\"mensaje\" value=\"$menId\" class=\"link-button\">$menAsunto</button></form></div>
                         <div class='td'>".$menFecha."</div>
-                        <div class='td' style='width: 42px;'></div></div>");
+                        <div class='td' style='width: 42px;justify-content:center;'><form method=\"POST\" action='procesa.php'><input type='hidden' name='codMensaje' value='$menId'><input type='image' src='images/borrar.png'></form></div></div>");
                     }
                     echo "</div>";
                 }
             ?>
         </section>
     </main>
+    <script>
+    $('#editable-select').editableSelect();
+    </script>
     <footer>
     </footer>
 </body>

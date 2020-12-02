@@ -1,11 +1,24 @@
 <?php
 session_start();
-//ini_set('display_errors',0);
+ini_set('display_errors',0);
 $dwes = new mysqli('localhost', 'root', 'toor', 'mensajeria');
+//$dwes = new mysqli('localhost', 'alumno', 'alumno', 'mensajeria');
 $entrar = $_POST['entrar'];
 $logout = $_POST['logout'];
 if (isset($logout)) {
     session_destroy();
+}
+if (isset($_POST['enviarMensaje'])) {
+  $dwes->stmt_init();
+  $resultado = $dwes->prepare("INSERT INTO mensajes VALUES (0,?,?,?,?,CURRENT_TIMESTAMP(),'N')");
+  $resultado->bind_param('ssss',$_POST['destino'],$_POST['origen'],$_POST['asunto'],$_POST['texto']);
+  $resultado->execute();
+}
+if (isset($_POST['codMensaje'])) {
+  $dwes->stmt_init();
+  $resultado = $dwes->prepare("DELETE FROM mensajes WHERE id=?");
+  $resultado->bind_param('i',$_POST['codMensaje']);
+  $resultado->execute();
 }
 if (isset($entrar)) {
     $login = $_POST['login'];
