@@ -91,8 +91,8 @@ if (!isset($_SESSION['login'])) {
     <link href="https://rawgithub.com/indrimuska/jquery-editable-select/master/dist/jquery-editable-select.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script>
-    function eliminar() {
-
+    function verificar(menId) {
+        return confirm("Estás seguro? Es una acción irreversible");
     }
     </script>
 </head>
@@ -117,7 +117,7 @@ if (!isset($_SESSION['login'])) {
                     $dwes->stmt_init();
                     $resultado = $dwes->prepare("SELECT login FROM contactos");
                     $resultado->execute();
-                    $resultado->bind_result($loginRec);
+                    $resultado->bind_result($loginRec);if (
                     while ($resultado->fetch()) {
                         echo "<option value='$loginRec'>$loginRec</option>";
                     }
@@ -156,15 +156,19 @@ if (!isset($_SESSION['login'])) {
                     $dwes = new mysqli('localhost', 'root', 'toor', 'mensajeria');
                     //$dwes = new mysqli('localhost', 'alumno', 'alumno', 'mensajeria');
                     $dwes->stmt_init();
-                    $resultado = $dwes->prepare("SELECT m.id AS id, c.nombre AS nombre, m.asunto AS asunto, m.fecha AS fecha, m.leido AS leido FROM contactos c, mensajes m WHERE m.origen = c.login AND destino=?");
+                    $resultado = $dwes->prepare("SELECT m.id AS id, c.nombre AS nombre, m.asunto AS asunto, m.fecha AS fecha, m.leido AS leido FROM contactos c, mensajes m WHERE m.origen = c.login AND destino=? ORDER BY fecha desc, nombre asc");
                     $resultado->bind_param('s',$_SESSION['login']);
                     $resultado->execute();
                     $resultado->bind_result($menId, $menNombre, $menAsunto, $menFecha, $menLeido);
                     while ($resultado->fetch()) {
-                        echo ("<div class='titTR'><div class='td'><span>".$menNombre."</span></div>
-                        <div class='td'><form method=\"POST\" action=\"index.php\"><input type='hidden' name='accion' value='leeMen'><input type='hidden' name='menLeido' value='$menLeido'><button type=\"submit\" name=\"mensaje\" value=\"$menId\" class=\"link-button\">$menAsunto</button></form></div>
+                        echo "<div class='titTR'><div class='td'><span>".$menNombre."</span></div>
+                        <div class='td'><form method=\"POST\" action=\"index.php\"><input type='hidden' name='accion' value='leeMen'><input type='hidden' name='menLeido' value='$menLeido'><button type=\"submit\" name=\"mensaje\" value=\"$menId\" class=\"link-button\"";
+                        if($menLeido=="N") {
+                            echo "style='color:red'";
+                        }
+                        echo ">$menAsunto</button></form></div>
                         <div class='td'>".$menFecha."</div>
-                        <div class='td' style='width: 42px;justify-content:center;'><form method=\"POST\" action='procesa.php'><input type='hidden' name='codMensaje' value='$menId'><input type='image' src='images/borrar.png'></form></div></div>");
+                        <div class='td' style='width: 42px;justify-content:center;'><form method=\"POST\" action='procesa.php'><input type='hidden' id='$menId' name='codMensaje' value='$menId'><input type='image' src='images/borrar.png' onclick='return verificar($menId);'></form></div></div>";
                     }
                     echo "</div>";
                 }

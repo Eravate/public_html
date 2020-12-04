@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>
+        function comprobarAccion(accion) {
+            document.getElementById('result').innerHTML = "";
+            var formData = new FormData();
+            formData.append('accion', accion);
+            fetch('3-AJAX.php', {
+                method: "POST",
+                body: formData
+            })
+                .then(response => response.text())
+                .then(data => {
+                    numS = data.split(' ');
+                    document.getElementById("result").innerHTML = numS[2];
+                });
+        }
+    </script>
+</head>
+<body>
+    <div id="result" style="margin: auto; width: 200px; height: 20px; border: 1px solid black;">
+
+    </div>
+    <div style="margin: auto; width: 200px; height: 20px;">
+        <input type='button' value='Hora' onclick='comprobarAccion("hora")'> <input type='button' value='Número Aleatorio' onclick='comprobarAccion("rand")'>
+    </div> 
+</body>
+</html>

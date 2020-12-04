@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejercicio 2</title>
+</head>
+<body>
+    <script>
+        httpRequest = new XMLHttpRequest();
+        arrayCiudadesImportantes = [];
+        function rellenarSelects(arrayObjectos) {
+            arrayPaises = [];
+            for (i=0;i<arrayObjectos.pais.length;i++) {
+                arrayPaises.push(arrayObjectos.pais[i].nombre);
+                arrayCiudadesImportantes.push(arrayObjectos.pais[i].ciudadImportante);
+            }
+            for (i=0;i<arrayPaises.length;i++) {
+                document.getElementById("paises").innerHTML += "<option value="+i+">"+arrayPaises[i]+"</option>";
+            }
+            rellenarSelectsCiudad();
+        }
+        function rellenarSelectsCiudad() {
+            document.getElementById("ciudades").innerHTML = "";
+            posicion = document.getElementById('paises').options[document.getElementById('paises').selectedIndex].value;
+            for (i=0;i<arrayCiudadesImportantes[posicion].length;i++) {
+                document.getElementById("ciudades").innerHTML += "<option value="+i+">"+arrayCiudadesImportantes[posicion][i]+"</option>";
+            }
+        }
+        function comprobarJson() {
+            document.getElementById("paises").innerHTML = "";
+            fetch('ciudades.json') 
+                .then(response => response.text())
+                .then(data => {
+                    arrayObjectos = JSON.parse(data);
+                    rellenarSelects(arrayObjectos);
+                });
+        }
+    </script>
+    <input type=button value="obtenerJSON" onclick='comprobarJson()'>&nbsp; <select id='paises' onclick="rellenarSelectsCiudad()"></select>&nbsp; <select id='ciudades'></select>
+</body>
+</html>

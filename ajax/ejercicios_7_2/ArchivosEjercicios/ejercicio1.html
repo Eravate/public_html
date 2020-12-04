@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejercicio 1</title>
+    <style>
+        div {
+            margin: auto;
+            border: 1px solid green;
+            width: 800px;
+            height: 800px;
+            position: relative;
+        }
+    </style>
+    <script>
+        function comprobarNoticias() {
+            document.getElementById('noticias').innerHTML = "";
+            fetch('noticias.txt') 
+                .then(response => response.text())
+                .then(data => {
+                    noticias = data.split("\n");
+                    noticias.forEach(function(noticia) {
+                        not = noticia.split(":");
+                        document.getElementById('noticias').innerHTML += "<h1>"+not[0]+"</h1><br><p>"+not[1]+"</p><br>";
+                    });
+                });
+        }
+    </script>
+</head>
+<body>
+    <div id="noticias">
+
+    </div>
+    <input type="button" onclick="comprobarNoticias()"" value='Cargar'>
+</body>
+</html>
