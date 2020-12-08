@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>
+        httpRequest = new XMLHttpRequest();
+        var formData = new FormData();
+        formData.append('accion', 'nVotos');
+        fetch('4-Ajax.php', {
+                method: "POST",
+                body: formData
+            })
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("result").innerHTML = data;
+                });
+
+        function procesarRequest() {
+            if (httpRequest.readyState==4) {
+                if (httpRequest.status==200) {
+                    numero = httpRequest.responseText;
+                    document.getElementById("result").innerHTML = numero;
+                }
+            }
+        }
+        function comprobarAccion(accion) {
+            document.getElementById('result').innerHTML = "";
+            var formData = new FormData();
+            formData.append('accion', accion);
+            fetch('4-Ajax.php', {
+                method: "POST",
+                body: formData
+            })
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("result").innerHTML = data;
+                });
+        }
+    </script>
+</head>
+<body>
+    <div id="result" style="margin: auto; width: 200px; height: 20px; border: 1px solid black;">
+
+    </div>
+    <div style="margin: auto; width: 200px; height: 20px;">
+        <input type='button' value='AumentarVotos' onclick='comprobarAccion("votar")'>
+    </div> 
+</body>
+</html>
