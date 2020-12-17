@@ -117,7 +117,7 @@ if (!isset($_SESSION['login'])) {
                     $dwes->stmt_init();
                     $resultado = $dwes->prepare("SELECT login FROM contactos");
                     $resultado->execute();
-                    $resultado->bind_result($loginRec);if (
+                    $resultado->bind_result($loginRec);
                     while ($resultado->fetch()) {
                         echo "<option value='$loginRec'>$loginRec</option>";
                     }

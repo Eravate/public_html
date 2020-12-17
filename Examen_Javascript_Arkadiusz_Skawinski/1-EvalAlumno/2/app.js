@@ -10,13 +10,11 @@ function realizarAlert(resultado) {
     var num = document.getElementById("numero").value;
     var numArray = num.split('');
     var esPalindro = true;
-    for (var i=0;i<numArray.length;i++) {
-        if (numArray[0] != numArray[i]) {
-            esPalindro = false;
-            break;
-        }
+    numArrayRev = "";
+    for (var i=numArray.length-1;i>=0;i--) {
+        numArrayRev += numArray[i];
     }
-    if (esPalindro) {
+    if (numArrayRev == num) {
         espalindromo = " palindromo";
     } else {
         espalindromo = " no palindromo";

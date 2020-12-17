@@ -1,7 +1,6 @@
 * {
   box-sizing: border-box;
 }
-
 .borde,
 .profile {
   border: 1px solid black;
@@ -29,9 +28,5 @@
 
 .selected {
   background-color: red;
-  color: white;
-}
-li:hover {
-  background-color: darkblue;
   color: white;
 }
